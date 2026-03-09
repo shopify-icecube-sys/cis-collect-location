@@ -2,7 +2,7 @@ import type {
   RunInput,
   CartDeliveryOptionsTransformRunResult,
 } from "../generated/api";
-// Hello
+
 const NO_CHANGES: CartDeliveryOptionsTransformRunResult = {
   operations: [],
 };
