@@ -1,0 +1,23 @@
+query RunInput {
+  cart {
+    lines {
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          product {
+            cisCollectLocations: metafield(namespace: "magento", key: "cis_collect_locations") {
+              value
+            }
+          }
+        }
+      }
+    }
+    deliveryGroups {
+      id
+      deliveryOptions {
+        handle
+        title
+      }
+    }
+  }
+}
