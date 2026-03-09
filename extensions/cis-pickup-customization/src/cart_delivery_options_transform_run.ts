@@ -6,7 +6,6 @@ import type {
 const NO_CHANGES: CartDeliveryOptionsTransformRunResult = {
   operations: [],
 };
-// For Testing
 const ALL_LOCATIONS_VALUE = "[All Locations]";
 const DISABLED_VALUE = "[Disabled]";
 const AVAILABLE_LOCATIONS = ["Alexandria", "Chullora", "Brookvale", "Sans Souci"];
