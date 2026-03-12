@@ -11,40 +11,39 @@ const DISABLED_VALUE = "[Disabled]";
 const AVAILABLE_LOCATIONS = ["Alexandria", "Chullora", "Brookvale", "Sans Souci"];
 
 export function cartDeliveryOptionsTransformRun(input: RunInput): CartDeliveryOptionsTransformRunResult {
-  const productLocations = new Set<string>();
-  let hasDisabled = false;
-  let allProductsAllowed = true;
+  let allowedLocations = new Set<string>(AVAILABLE_LOCATIONS);
+  let hasRestrictedProduct = false;
 
   for (const line of input.cart.lines) {
     if (line.merchandise.__typename !== "ProductVariant") continue;
 
-    const locationValue = line.merchandise.product.cisCollectLocations?.value?.trim() || ALL_LOCATIONS_VALUE;
-
-    if (locationValue === DISABLED_VALUE) {
-      hasDisabled = true;
-    } else if (locationValue !== ALL_LOCATIONS_VALUE) {
-      allProductsAllowed = false;
-      if (AVAILABLE_LOCATIONS.includes(locationValue)) {
-        productLocations.add(locationValue);
+    const metafieldValue = line.merchandise.product.cisCollectLocations?.value;
+    
+    if (metafieldValue) {
+      try {
+        const productAllowed = JSON.parse(metafieldValue) as string[];
+        if (Array.isArray(productAllowed) && productAllowed.length > 0) {
+          hasRestrictedProduct = true;
+          // Calculate intersection
+          allowedLocations = new Set(
+            Array.from(allowedLocations).filter(loc => productAllowed.includes(loc))
+          );
+        }
+      } catch (e) {
+        // If parsing fails, fall back to allowing all for this product
+        console.error("Failed to parse metafield value:", metafieldValue);
       }
     }
   }
 
   const locationsToHide = new Set<string>();
-
-  if (hasDisabled) {
-    AVAILABLE_LOCATIONS.forEach(loc => locationsToHide.add(loc));
-  }
-  else if (productLocations.size > 1) {
-    AVAILABLE_LOCATIONS.forEach(loc => locationsToHide.add(loc));
-  }
-  else if (!allProductsAllowed && productLocations.size > 0) {
-    AVAILABLE_LOCATIONS.forEach(loc => {
-      if (!productLocations.has(loc)) {
-        locationsToHide.add(loc);
-      }
-    });
-  }
+  
+  // If we have restrictions and the intersection resulted in fewer than all locations
+  AVAILABLE_LOCATIONS.forEach(loc => {
+    if (!allowedLocations.has(loc)) {
+      locationsToHide.add(loc);
+    }
+  });
 
   if (locationsToHide.size === 0) {
     return NO_CHANGES;
